@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
 	"otremblay.com/jkl"
 )
 
@@ -22,7 +23,7 @@ func init() {
 type listissue jkl.Issue
 
 func (l *listissue) Color() string {
-	if os.Getenv("JKLNOCOLOR") == "true" {
+	if os.Getenv("JKLNOCOLOR") == "true" || !terminal.IsTerminal(int(os.Stdout.Fd())) {
 		return ""
 	}
 	if strings.Contains(os.Getenv("RED_ISSUE_STATUSES"), l.Fields.Status.Name) {
