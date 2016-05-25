@@ -10,8 +10,12 @@ import (
 type TaskCmd struct{}
 
 func (t *TaskCmd) Handle(args []string) error {
-	if len(args) == 1 {
+	c := len(args)
+	if c == 1 {
 		return t.Get(args[0])
+	}
+	if c == 2 {
+		return t.Transition(args[0], args[1])
 	}
 	return ErrTaskSubCommandNotFound
 }
@@ -24,5 +28,9 @@ func (t *TaskCmd) Get(taskKey string) error {
 		return err
 	}
 	fmt.Println(issue)
+	return nil
+}
+
+func (t *TaskCmd) Transition(taskKey, transition string) error {
 	return nil
 }

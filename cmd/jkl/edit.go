@@ -54,6 +54,7 @@ func (ecmd *EditCmd) Edit(taskKey string) error {
 }
 
 const EDIT_TEMPLATE = `Summary: {{.Fields.Summary}}
-Description: {{.Fields.Description}}`
+Description: {{.Fields.Description}}
+`
 
 var editTmpl = template.Must(template.New("editTmpl").Parse(EDIT_TEMPLATE))

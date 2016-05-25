@@ -31,13 +31,19 @@ type CommentColl struct {
 	Comments []Comment
 }
 
+type Status struct {
+	Name string
+}
+
 type Fields struct {
 	*IssueType  `json:"issuetype,omitempty"`
+	Assignee    *Author      `json:",omitempty"`
 	Project     *Project     `json:"project,omitempty"`
 	Summary     string       `json:"summary,omitempty"`
 	Description string       `json:"description,omitempty"`
 	Comment     *CommentColl `json:"comment,omitempty"`
 	Parent      *Issue       `json:",omitempty"`
+	Status      *Status      `json:",omitempty"`
 }
 type Issue struct {
 	Key    string  `json:"key,omitempty"`
@@ -61,7 +67,9 @@ var commentTemplate = `{{if .Fields.Comment }}{{range .Fields.Comment.Comments}}
 
 {{end}}{{end}}`
 
-var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t[{{.Fields.IssueType.Name}}]\t{{.Fields.Summary}}\n\n" +
+var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
+	"\x1b[1mStatus\x1b[0m:\t {{.Fields.Status.Name}}\n" +
+	"\x1b[1mAssignee:\x1b[0m\t{{.Fields.Assignee.Name}}\n\n" +
 	"\x1b[1mDescription:\x1b[0m   {{.Fields.Description}} \n\n" +
 	"\x1b[1mComments:\x1b[0m\n\n" + commentTemplate
 

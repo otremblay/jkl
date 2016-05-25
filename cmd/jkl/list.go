@@ -7,6 +7,7 @@ import (
 
 	"text/template"
 
+	"fmt"
 	"otremblay.com/jkl"
 )
 
@@ -14,8 +15,30 @@ var listTemplateStr string
 var listTemplate *template.Template
 
 func init() {
-	flag.StringVar(&listTemplateStr, "listTemplate", "{{.Key}}\t({{.Fields.IssueType.Name}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\n", "Go template used in list command")
+	flag.StringVar(&listTemplateStr, "listTemplate", "{{.Color}}{{.Key}}{{if .Color}}\x1b[39m{{end}}\t({{.Fields.IssueType.Name}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\t[{{.Fields.Assignee.Name}}]\n", "Go template used in list command")
 	listTemplate = template.Must(template.New("listTemplate").Parse(listTemplateStr))
+}
+
+type listissue jkl.Issue
+
+func (l *listissue) Color() string {
+	if os.Getenv("JKLNOCOLOR") == "true" {
+		return ""
+	}
+	if strings.Contains(os.Getenv("RED_ISSUE_STATUSES"), l.Fields.Status.Name) {
+		return "\x1b[31m"
+	}
+
+	if strings.Contains(os.Getenv("GREEN_ISSUE_STATUSES"), l.Fields.Status.Name) {
+		return "\x1b[32m"
+	}
+	if strings.Contains(os.Getenv("BLUE_ISSUE_STATUSES"), l.Fields.Status.Name) {
+		return "\x1b[34m"
+	}
+	if strings.Contains(os.Getenv("YELLOW_ISSUE_STATUSES"), l.Fields.Status.Name) || os.Getenv("YELLOW_ISSUE_STATUSES") == "default" {
+		return "\x1b[33m"
+	}
+	return ""
 }
 
 func List(args []string) error {
@@ -23,7 +46,12 @@ func List(args []string) error {
 		return err
 	} else {
 		for _, issue := range issues {
-			listTemplate.Execute(os.Stdout, issue)
+			var li listissue
+			li = listissue(*issue)
+			err := listTemplate.Execute(os.Stdout, &li)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
 		}
 	}
 	return nil
