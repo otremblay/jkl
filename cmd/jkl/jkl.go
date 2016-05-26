@@ -41,7 +41,11 @@ func findRCFile() {
 func runcmd(args []string) error {
 	switch args[0] {
 	case "list":
-		return List(flag.Args()[1:])
+		lcmd, err := NewListCmd(flag.Args()[1:])
+		if err != nil {
+			return err
+		}
+		return lcmd.List()
 	case "create":
 		ccmd, err := NewCreateCmd(flag.Args()[1:])
 		if err != nil {

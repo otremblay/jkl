@@ -24,7 +24,7 @@ func Create(issue *Issue) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(issue)
+	//	fmt.Println(issue)
 	resp, err := httpClient.Post("api/2/issue", payload)
 	if err != nil {
 		fmt.Println(resp.StatusCode)

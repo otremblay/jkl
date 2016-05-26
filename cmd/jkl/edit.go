@@ -16,8 +16,8 @@ type EditCmd struct {
 	file    string
 }
 
-func NewEditCmd(args []string) (*CreateCmd, error) {
-	ccmd := &CreateCmd{project: os.Getenv("JIRA_PROJECT")}
+func NewEditCmd(args []string) (*EditCmd, error) {
+	ccmd := &EditCmd{project: os.Getenv("JIRA_PROJECT")}
 	f := flag.NewFlagSet("x", flag.ExitOnError)
 	f.StringVar(&ccmd.project, "p", "", "Jira project key")
 	f.StringVar(&ccmd.file, "f", "filename", "File to get issue description from")

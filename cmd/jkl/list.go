@@ -12,14 +12,6 @@ import (
 	"otremblay.com/jkl"
 )
 
-var listTemplateStr string
-var listTemplate *template.Template
-
-func init() {
-	flag.StringVar(&listTemplateStr, "listTemplate", "{{.Color}}{{.Key}}{{if .Color}}\x1b[39m{{end}}\t({{.Fields.IssueType.Name}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\t[{{.Fields.Assignee.Name}}]\n", "Go template used in list command")
-	listTemplate = template.Must(template.New("listTemplate").Parse(listTemplateStr))
-}
-
 type listissue jkl.Issue
 
 func (l *listissue) Color() string {
@@ -42,14 +34,37 @@ func (l *listissue) Color() string {
 	return ""
 }
 
-func List(args []string) error {
-	if issues, err := jkl.List(strings.Join(args, " ")); err != nil {
+type ListCmd struct {
+	args    []string
+	tmplstr string
+	tmpl    *template.Template
+}
+
+func NewListCmd(args []string) (*ListCmd, error) {
+	ccmd := &ListCmd{}
+	f := flag.NewFlagSet("x", flag.ExitOnError)
+	f.StringVar(&ccmd.tmplstr, "listTemplate", "{{.Color}}{{.Key}}{{if .Color}}\x1b[39m{{end}}\t({{.Fields.IssueType.Name}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\t{{if .Fields.Assignee}}[{{.Fields.Assignee.Name}}]{{end}}\n", "Go template used in list command")
+	f.Parse(args)
+	ccmd.args = f.Args()
+	if len(ccmd.args) == 0 {
+		proj := os.Getenv("JIRA_PROJECT")
+		if proj != "" {
+			proj = fmt.Sprintf(" and project = %s ", proj)
+		}
+		ccmd.args = []string{fmt.Sprintf("sprint in openSprints() %s order by rank", proj)}
+	}
+	ccmd.tmpl = template.Must(template.New("listTemplate").Parse(ccmd.tmplstr))
+	return ccmd, nil
+}
+
+func (l *ListCmd) List() error {
+	if issues, err := jkl.List(strings.Join(l.args, " ")); err != nil {
 		return err
 	} else {
 		for _, issue := range issues {
 			var li listissue
 			li = listissue(*issue)
-			err := listTemplate.Execute(os.Stdout, &li)
+			err := l.tmpl.Execute(os.Stdout, &li)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 			}
