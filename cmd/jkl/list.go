@@ -13,6 +13,10 @@ import (
 )
 
 type listissue jkl.Issue
+func (l *listissue) URL() string {
+i := jkl.Issue(*l)
+return (&i).URL()
+}
 
 func (l *listissue) Color() string {
 	if os.Getenv("JKLNOCOLOR") == "true" || !terminal.IsTerminal(int(os.Stdout.Fd())) {

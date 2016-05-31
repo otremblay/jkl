@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"text/template"
+"os"
 )
 
 type Search struct {
@@ -74,6 +75,10 @@ func PrettySeconds(seconds int) string {
 type Issue struct {
 	Key    string  `json:"key,omitempty"`
 	Fields *Fields `json:"fields"`
+}
+
+func (i *Issue) URL() string {
+	return os.Getenv("JIRA_ROOT") + "browse/"+ i.Key
 }
 
 func (i *Issue) String() string {
