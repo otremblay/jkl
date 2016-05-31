@@ -26,11 +26,12 @@ func main() {
 func findRCFile() {
 	dir, err := os.Getwd()
 	if err != nil {
+
 		log.Fatalln(err)
 	}
 	path := strings.Split(dir, "/")
 	for i := len(path) - 1; i > 0; i-- {
-		err := godotenv.Load(strings.Join(path[0:i], "/") + ".jklrc")
+		err := godotenv.Load(strings.Join(path[0:i], "/") + "/.jklrc")
 		if err == nil {
 			return
 		}
