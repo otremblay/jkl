@@ -16,7 +16,7 @@ import (
 
 type jklfs struct {
 	pathfs.FileSystem
-	issuePerDirs map[string]*jkl.Issue
+	issuePerDirs map[string]*jkl.JiraIssue
 }
 
 func (j *jklfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
@@ -90,7 +90,7 @@ func main() {
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n  jklfs MOUNTPOINT")
 	}
-	nfs := pathfs.NewPathNodeFs(&jklfs{pathfs.NewDefaultFileSystem(), map[string]*jkl.Issue{}}, nil)
+	nfs := pathfs.NewPathNodeFs(&jklfs{pathfs.NewDefaultFileSystem(), map[string]*jkl.JiraIssue{}}, nil)
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil)
 	if err != nil {
 		log.Fatalf("Mount fail: %v\n", err)

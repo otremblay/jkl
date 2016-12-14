@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"log"
 
-	"os"
-
-	"github.com/joho/godotenv"
-	"strings"
+	"otremblay.com/jkl"
 )
 
 func main() {
-	findRCFile()
+	jkl.FindRCFile()
 	flag.Parse()
 	if len(flag.Args()) == 0 {
 		fmt.Print(usage)
@@ -21,22 +18,6 @@ func main() {
 	if err := runcmd(flag.Args()); err != nil {
 		log.Println(err)
 	}
-}
-
-func findRCFile() {
-	dir, err := os.Getwd()
-	if err != nil {
-
-		log.Fatalln(err)
-	}
-	path := strings.Split(dir, "/")
-	for i := len(path) - 1; i > 0; i-- {
-		err := godotenv.Load(strings.Join(path[0:i], "/") + "/.jklrc")
-		if err == nil {
-			return
-		}
-	}
-	log.Fatalln("No .jklrc found")
 }
 
 func runcmd(args []string) error {

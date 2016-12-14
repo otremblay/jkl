@@ -40,7 +40,7 @@ func copyInitial(dst io.WriteSeeker, initial io.Reader) {
 	dst.Seek(0, 0)
 }
 
-func GetIssueFromTmpFile(initial io.Reader) (*jkl.Issue, error) {
+func GetIssueFromTmpFile(initial io.Reader) (*jkl.JiraIssue, error) {
 	f, err := ioutil.TempFile(os.TempDir(), "jkl")
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func GetTextFromFile(file *os.File) (io.Reader, error) {
 	return file, err
 }
 
-func GetIssueFromFile(filename string, initial io.Reader) (*jkl.Issue, error) {
+func GetIssueFromFile(filename string, initial io.Reader) (*jkl.JiraIssue, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -104,8 +104,8 @@ func GetIssueFromFile(filename string, initial io.Reader) (*jkl.Issue, error) {
 
 var spacex = regexp.MustCompile(`\s`)
 
-func IssueFromFile(f io.Reader) *jkl.Issue {
-	iss := &jkl.Issue{Fields: &jkl.Fields{}}
+func IssueFromFile(f io.Reader) *jkl.JiraIssue {
+	iss := &jkl.JiraIssue{Fields: &jkl.Fields{}}
 	riss := reflect.ValueOf(iss).Elem()
 	fieldsField := riss.FieldByName("Fields").Elem()
 	currentField := reflect.Value{}
@@ -143,6 +143,6 @@ func IssueFromFile(f io.Reader) *jkl.Issue {
 	return iss
 }
 
-func IssueFromList(list []string) *jkl.Issue {
+func IssueFromList(list []string) *jkl.JiraIssue {
 	return IssueFromFile(bytes.NewBufferString(strings.Join(list, "\n")))
 }

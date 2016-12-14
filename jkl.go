@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
+	"strings"
+
+	"github.com/joho/godotenv"
 )
 
-var defaultIssue = &Issue{}
+var defaultIssue = &JiraIssue{}
 
 func bootHttpClient() {
 	if httpClient == nil {
@@ -18,7 +22,7 @@ func bootHttpClient() {
 	}
 }
 
-func Create(issue *Issue) error {
+func Create(issue *JiraIssue) error {
 	bootHttpClient()
 	payload, err := formatPayload(issue)
 	if err != nil {
@@ -36,7 +40,7 @@ func Create(issue *Issue) error {
 	return nil
 }
 
-func Edit(issue *Issue) error {
+func Edit(issue *JiraIssue) error {
 	bootHttpClient()
 	payload, err := formatPayload(issue)
 	if err != nil {
@@ -53,7 +57,7 @@ func Edit(issue *Issue) error {
 	return nil
 }
 
-func List(jql string) ([]*Issue, error) {
+func List(jql string) ([]*JiraIssue, error) {
 	bootHttpClient()
 	path := "api/2/search?fields=*all&maxResults=1000"
 	if jql != "" {
@@ -75,7 +79,7 @@ func List(jql string) ([]*Issue, error) {
 	return issues.Issues, nil
 }
 
-func GetIssue(taskKey string) (*Issue, error) {
+func GetIssue(taskKey string) (*JiraIssue, error) {
 	bootHttpClient()
 	path := "api/2/issue/" + taskKey
 	resp, err := httpClient.Get(path)
@@ -84,7 +88,7 @@ func GetIssue(taskKey string) (*Issue, error) {
 		return nil, err
 	}
 	dec := json.NewDecoder(resp.Body)
-	var issue = &Issue{}
+	var issue = &JiraIssue{}
 	err = dec.Decode(issue)
 	if err != nil {
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -111,7 +115,7 @@ func AddComment(taskKey string, comment string) error {
 	return nil
 }
 
-func formatPayload(issue *Issue) (io.Reader, error) {
+func formatPayload(issue *JiraIssue) (io.Reader, error) {
 	if issue.Fields != nil &&
 		issue.Fields.Project != nil &&
 		issue.Fields.Project.Key == "" {
@@ -127,4 +131,22 @@ func formatPayload(issue *Issue) (io.Reader, error) {
 		return nil, err
 	}
 	return payload, nil
+}
+
+func FindRCFile() string {
+	dir, err := os.Getwd()
+	if err != nil {
+
+		log.Fatalln(err)
+	}
+	path := strings.Split(dir, "/")
+	for i := len(path); i > 0; i-- {
+		dotenvpath := strings.Join(path[0:i], "/") + "/.jklrc"
+		err := godotenv.Load(dotenvpath)
+		if err == nil {
+			return dotenvpath
+		}
+	}
+	log.Fatalln("No .jklrc found")
+	return ""
 }

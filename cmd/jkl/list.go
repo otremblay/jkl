@@ -8,14 +8,16 @@ import (
 	"text/template"
 
 	"fmt"
+
 	"golang.org/x/crypto/ssh/terminal"
 	"otremblay.com/jkl"
 )
 
-type listissue jkl.Issue
+type listissue jkl.JiraIssue
+
 func (l *listissue) URL() string {
-i := jkl.Issue(*l)
-return (&i).URL()
+	i := jkl.JiraIssue(*l)
+	return (&i).URL()
 }
 
 func (l *listissue) Color() string {

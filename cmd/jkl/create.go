@@ -28,7 +28,7 @@ var ErrCcmdJiraProjectRequired = errors.New("Jira project needs to be set")
 
 func (ccmd *CreateCmd) Create() error {
 	var b = bytes.NewBufferString(CREATE_TEMPLATE)
-	var iss *jkl.Issue
+	var iss *jkl.JiraIssue
 	var err error
 	if ccmd.file != "" {
 		iss, err = GetIssueFromFile(ccmd.file, b)

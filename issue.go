@@ -4,19 +4,30 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"text/template"
-"os"
 )
 
 type Search struct {
-	Issues []*Issue `json:"issues"`
+	Issues []*JiraIssue `json:"issues"`
 }
 
 type IssueType struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Fields map[string]FieldSpec
 }
+
+type FieldSpec struct {
+	Name     string
+	Required bool
+	Schema   struct {
+		Type string
+	}
+}
+
 type Project struct {
-	Key string `json:"key,omitempty"`
+	Key        string `json:"key,omitempty"`
+	IssueTypes []IssueType
 }
 
 type Author struct {
@@ -25,6 +36,7 @@ type Author struct {
 }
 
 type Comment struct {
+	Id     string
 	Author *Author
 	Body   string
 }
@@ -49,7 +61,7 @@ type Fields struct {
 	Summary      string        `json:"summary,omitempty"`
 	Description  string        `json:"description,omitempty"`
 	Comment      *CommentColl  `json:"comment,omitempty"`
-	Parent       *Issue        `json:",omitempty"`
+	Parent       *JiraIssue    `json:",omitempty"`
 	Status       *Status       `json:",omitempty"`
 	TimeTracking *TimeTracking `json:"timetracking,omitempty"`
 }
@@ -72,16 +84,16 @@ func PrettySeconds(seconds int) string {
 	return fmt.Sprintf("%dd %2dh %2dm %2ds", days, hours, minutes, seconds)
 }
 
-type Issue struct {
+type JiraIssue struct {
 	Key    string  `json:"key,omitempty"`
 	Fields *Fields `json:"fields"`
 }
 
-func (i *Issue) URL() string {
-	return os.Getenv("JIRA_ROOT") + "browse/"+ i.Key
+func (i *JiraIssue) URL() string {
+	return os.Getenv("JIRA_ROOT") + "browse/" + i.Key
 }
 
-func (i *Issue) String() string {
+func (i *JiraIssue) String() string {
 	var b = bytes.NewBuffer(nil)
 	err := issueTmpl.Execute(b, i)
 	if err != nil {
@@ -91,7 +103,7 @@ func (i *Issue) String() string {
 	return b.String()
 }
 
-var commentTemplate = `{{if .Fields.Comment }}{{range .Fields.Comment.Comments}}{{.Author.DisplayName}}:
+var commentTemplate = `{{if .Fields.Comment }}{{$k := .Key}}{{range .Fields.Comment.Comments}}{{.Author.DisplayName}} ({{$k}}#{{.Id}}):
 -----------------
 {{.Body}}
 -----------------

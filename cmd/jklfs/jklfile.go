@@ -32,7 +32,7 @@ func (f *jklfile) String() string {
 func (f *jklfile) Write(data []byte, off int64) (uint32, fuse.Status) {
 	n, err := f.File.WriteAt(data, off)
 	if err != nil {
-		return fuse.EACCES
+		return uint32(0),fuse.EACCES
 	}
 	return uint32(n), fuse.OK
 }
