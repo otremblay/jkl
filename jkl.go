@@ -3,6 +3,7 @@ package jkl
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var Verbose *bool
 var defaultIssue = &JiraIssue{}
 
 func bootHttpClient() {
@@ -67,6 +69,16 @@ func List(jql string) ([]*JiraIssue, error) {
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		fmt.Println("Status code:", resp.StatusCode)
+		fmt.Println("Response:")
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println(string(b))
+		return nil, errors.New("Some http error happened.")
 	}
 	dec := json.NewDecoder(resp.Body)
 	var issues = &Search{}

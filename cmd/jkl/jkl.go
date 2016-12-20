@@ -8,9 +8,12 @@ import (
 	"otremblay.com/jkl"
 )
 
+var verbose = flag.Bool("v", false, "Output debug information about jkl")
+
 func main() {
 	jkl.FindRCFile()
 	flag.Parse()
+	jkl.Verbose = verbose
 	if len(flag.Args()) == 0 {
 		fmt.Print(usage)
 		return
@@ -23,6 +26,9 @@ func main() {
 func runcmd(args []string) error {
 	switch args[0] {
 	case "list":
+		if *verbose {
+			fmt.Println("Running List command")
+		}
 		lcmd, err := NewListCmd(flag.Args()[1:])
 		if err != nil {
 			return err
