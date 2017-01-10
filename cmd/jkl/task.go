@@ -7,15 +7,18 @@ import (
 	"otremblay.com/jkl"
 )
 
-type TaskCmd struct{}
+type TaskCmd struct {
+	args []string
+}
 
-func (t *TaskCmd) Handle(args []string) error {
-	c := len(args)
+// TODO: split in individual commands.
+func (t *TaskCmd) Handle() error {
+	c := len(t.args)
 	if c == 1 {
-		return t.Get(args[0])
+		return t.Get(t.args[0])
 	}
 	if c == 2 {
-		return t.Transition(args[0], args[1])
+		return t.Transition(t.args[0], t.args[1])
 	}
 	return ErrTaskSubCommandNotFound
 }
@@ -33,4 +36,8 @@ func (t *TaskCmd) Get(taskKey string) error {
 
 func (t *TaskCmd) Transition(taskKey, transition string) error {
 	return nil
+}
+
+func (t *TaskCmd) Run() error {
+	return t.Handle()
 }

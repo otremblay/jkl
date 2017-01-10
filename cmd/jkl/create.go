@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"io"
 	"os"
 
 	"otremblay.com/jkl"
@@ -27,7 +28,20 @@ func NewCreateCmd(args []string) (*CreateCmd, error) {
 var ErrCcmdJiraProjectRequired = errors.New("Jira project needs to be set")
 
 func (ccmd *CreateCmd) Create() error {
-	var b = bytes.NewBufferString(CREATE_TEMPLATE)
+	var b = bytes.NewBuffer([]byte{})
+	var readfile bool
+	if fp := os.Getenv("JIRA_ISSUE_TEMPLATE"); fp != "" {
+		if f, err := os.Open(fp); err == nil {
+			_, err := io.Copy(b, f)
+			if err == nil {
+				readfile = true
+			}
+
+		}
+	}
+	if !readfile {
+		b.WriteString(CREATE_TEMPLATE)
+	}
 	var iss *jkl.JiraIssue
 	var err error
 	if ccmd.file != "" {
@@ -47,6 +61,10 @@ func (ccmd *CreateCmd) Create() error {
 		iss.Fields.Project = &jkl.Project{Key: ccmd.project}
 	}
 	return jkl.Create(iss)
+}
+
+func (ccmd *CreateCmd) Run() error {
+	return ccmd.Create()
 }
 
 const CREATE_TEMPLATE = `Issue Type:

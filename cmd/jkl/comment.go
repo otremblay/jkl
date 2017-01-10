@@ -50,3 +50,7 @@ func (ccmd *CommentCmd) Comment() error {
 
 	return jkl.AddComment(ccmd.issueKey, b.String())
 }
+
+func (ccmd *CommentCmd) Run() error {
+	return ccmd.Comment()
+}

@@ -49,6 +49,9 @@ type ListCmd struct {
 func NewListCmd(args []string) (*ListCmd, error) {
 	ccmd := &ListCmd{}
 	f := flag.NewFlagSet("x", flag.ExitOnError)
+	if *verbose {
+		fmt.Println(&ccmd.tmplstr)
+	}
 	f.StringVar(&ccmd.tmplstr, "listTemplate", "{{.Color}}{{.Key}}{{if .Color}}\x1b[39m{{end}}\t({{.Fields.IssueType.Name}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\t{{if .Fields.Assignee}}[{{.Fields.Assignee.Name}}]{{end}}\n", "Go template used in list command")
 	f.Parse(args)
 	ccmd.args = f.Args()
@@ -58,6 +61,12 @@ func NewListCmd(args []string) (*ListCmd, error) {
 			proj = fmt.Sprintf(" and project = %s ", proj)
 		}
 		ccmd.args = []string{fmt.Sprintf("sprint in openSprints() %s order by rank", proj)}
+		if *verbose {
+			fmt.Println("No arguments, running default command")
+		}
+	}
+	if *verbose {
+		fmt.Println(ccmd.args)
 	}
 	ccmd.tmpl = template.Must(template.New("listTemplate").Parse(ccmd.tmplstr))
 	return ccmd, nil
@@ -77,4 +86,8 @@ func (l *ListCmd) List() error {
 		}
 	}
 	return nil
+}
+
+func (l *ListCmd) Run() error {
+	return l.List()
 }

@@ -14,6 +14,7 @@ type EditCmd struct {
 	args    []string
 	project string
 	file    string
+	taskKey string
 }
 
 func NewEditCmd(args []string) (*EditCmd, error) {
@@ -22,12 +23,13 @@ func NewEditCmd(args []string) (*EditCmd, error) {
 	f.StringVar(&ccmd.project, "p", "", "Jira project key")
 	f.StringVar(&ccmd.file, "f", "filename", "File to get issue description from")
 	f.Parse(args)
+	ccmd.taskKey = flag.Arg(0)
 	return ccmd, nil
 }
 
-func (ecmd *EditCmd) Edit(taskKey string) error {
+func (ecmd *EditCmd) Edit() error {
 	b := bytes.NewBuffer(nil)
-	iss, err := jkl.GetIssue(taskKey)
+	iss, err := jkl.GetIssue(ecmd.taskKey)
 	if err != nil {
 		return err
 	}
@@ -49,8 +51,12 @@ func (ecmd *EditCmd) Edit(taskKey string) error {
 		}
 
 	}
-	iss.Key = taskKey
+	iss.Key = ecmd.taskKey
 	return jkl.Edit(iss)
+}
+
+func (ecmd *EditCmd) Run() error {
+	return ecmd.Edit()
 }
 
 const EDIT_TEMPLATE = `Summary: {{.Fields.Summary}}

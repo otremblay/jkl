@@ -95,7 +95,11 @@ func (i *JiraIssue) URL() string {
 
 func (i *JiraIssue) String() string {
 	var b = bytes.NewBuffer(nil)
-	err := issueTmpl.Execute(b, i)
+	var tmpl *template.Template = issueTmpl
+	if os.Getenv("JKLNOCOLOR") == "true" {
+		tmpl = issueTmplNoColor
+	}
+	err := tmpl.Execute(b, i)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -117,4 +121,12 @@ var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t{{if .Fields.IssueType}}[{{.Fields.I
 	"\x1b[1mDescription:\x1b[0m   {{.Fields.Description}} \n\n" +
 	"\x1b[1mComments:\x1b[0m\n\n" + commentTemplate
 
+var issueTmplNoColorTxt = "{{.Key}\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
+	"{{if .Fields.Status}}Status:\t {{.Fields.Status.Name}}\n{{end}}" +
+	"{{if .Fields.Assignee}}Assignee:\t{{.Fields.Assignee.Name}}\n{{end}}\n" +
+	"Time Remaining/Original Estimate:\t{{.Fields.PrettyRemaining}} / {{.Fields.PrettyOriginalEstimate}}\n\n" +
+	"Description:   {{.Fields.Description}} \n\n" +
+	"Comments:\n\n" + commentTemplate
+
 var issueTmpl = template.Must(template.New("issueTmpl").Parse(issueTmplTxt))
+var issueTmplNoColor = template.Must(template.New("issueTmpl").Parse(issueTmplNoColorTxt))

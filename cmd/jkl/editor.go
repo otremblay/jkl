@@ -50,7 +50,7 @@ func GetIssueFromTmpFile(initial io.Reader) (*jkl.JiraIssue, error) {
 	if err != nil {
 		return nil, err
 	}
-	return IssueFromFile(f2), nil
+	return IssueFromReader(f2), nil
 }
 
 func GetTextFromTmpFile(initial io.Reader) (io.Reader, error) {
@@ -99,12 +99,12 @@ func GetIssueFromFile(filename string, initial io.Reader) (*jkl.JiraIssue, error
 	if err != nil {
 		return nil, err
 	}
-	return IssueFromFile(f2), nil
+	return IssueFromReader(f2), nil
 }
 
 var spacex = regexp.MustCompile(`\s`)
 
-func IssueFromFile(f io.Reader) *jkl.JiraIssue {
+func IssueFromReader(f io.Reader) *jkl.JiraIssue {
 	iss := &jkl.JiraIssue{Fields: &jkl.Fields{}}
 	riss := reflect.ValueOf(iss).Elem()
 	fieldsField := riss.FieldByName("Fields").Elem()
@@ -118,20 +118,40 @@ func IssueFromFile(f io.Reader) *jkl.JiraIssue {
 		parts := strings.Split(string(b), ":")
 		potentialField := spacex.ReplaceAllString(parts[0], "")
 
+		// Is the current line a field in an issue directly?
+		// Also special cases: Objects that have a deeper depth
+		// have specific fields "flattened" for ease of use.
+		// I think this loop could be made more general, to account
+		// for deeper objects. Then again, there's not that many fields
+		// I actually care about yet.
+		// Custom fields are gonna be hell.
+
 		if newfield := fieldsField.FieldByName(potentialField); newfield.IsValid() {
 			parts = parts[1:len(parts)]
 			if potentialField == "IssueType" {
-				iss.Fields.IssueType = &jkl.IssueType{}
-				currentField = reflect.Value{}
-				f2 := newfield.Elem()
-				f3 := f2.FieldByName("Name")
-				f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
+				if len(parts) > 0 {
+					iss.Fields.IssueType = &jkl.IssueType{}
+					currentField = reflect.Value{}
+					f2 := newfield.Elem()
+					f3 := f2.FieldByName("Name")
+					f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
+				}
 			} else if potentialField == "Project" {
-				iss.Fields.Project = &jkl.Project{}
-				currentField = reflect.Value{}
-				f2 := newfield.Elem()
-				f3 := f2.FieldByName("Key")
-				f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
+				if len(parts) > 0 {
+					iss.Fields.Project = &jkl.Project{}
+					currentField = reflect.Value{}
+					f2 := newfield.Elem()
+					f3 := f2.FieldByName("Key")
+					f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
+				}
+			} else if potentialField == "Parent" {
+				if len(parts) > 0 {
+					iss.Fields.Parent = &jkl.JiraIssue{}
+					currentField = reflect.Value{}
+					f2 := newfield.Elem()
+					f3 := f2.FieldByName("Key")
+					f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
+				}
 			} else {
 				currentField = newfield
 			}
@@ -144,5 +164,5 @@ func IssueFromFile(f io.Reader) *jkl.JiraIssue {
 }
 
 func IssueFromList(list []string) *jkl.JiraIssue {
-	return IssueFromFile(bytes.NewBufferString(strings.Join(list, "\n")))
+	return IssueFromReader(bytes.NewBufferString(strings.Join(list, "\n")))
 }
