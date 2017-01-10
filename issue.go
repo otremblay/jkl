@@ -121,7 +121,7 @@ var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t{{if .Fields.IssueType}}[{{.Fields.I
 	"\x1b[1mDescription:\x1b[0m   {{.Fields.Description}} \n\n" +
 	"\x1b[1mComments:\x1b[0m\n\n" + commentTemplate
 
-var issueTmplNoColorTxt = "{{.Key}\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
+var issueTmplNoColorTxt = "{{.Key}}\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
 	"{{if .Fields.Status}}Status:\t {{.Fields.Status.Name}}\n{{end}}" +
 	"{{if .Fields.Assignee}}Assignee:\t{{.Fields.Assignee.Name}}\n{{end}}\n" +
 	"Time Remaining/Original Estimate:\t{{.Fields.PrettyRemaining}} / {{.Fields.PrettyOriginalEstimate}}\n\n" +
