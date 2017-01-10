@@ -129,4 +129,4 @@ var issueTmplNoColorTxt = "{{.Key}\t{{if .Fields.IssueType}}[{{.Fields.IssueType
 	"Comments:\n\n" + commentTemplate
 
 var issueTmpl = template.Must(template.New("issueTmpl").Parse(issueTmplTxt))
-var issueTmplNoColor = template.Must(template.New("issueTmpl").Parse(issueTmplNoColorTxt))
+var issueTmplNoColor = template.Must(template.New("issueTmplNoColor").Parse(issueTmplNoColorTxt))
