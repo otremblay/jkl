@@ -58,7 +58,7 @@ func NewListCmd(args []string) (*ListCmd, error) {
 	if len(ccmd.args) == 0 {
 		proj := os.Getenv("JIRA_PROJECT")
 		if proj != "" {
-			proj = fmt.Sprintf(" and project = %s ", proj)
+			proj = fmt.Sprintf(" and project = '%s'", proj)
 		}
 		ccmd.args = []string{fmt.Sprintf("sprint in openSprints() %s order by rank", proj)}
 		if *verbose {
