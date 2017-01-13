@@ -115,6 +115,7 @@ var commentTemplate = `{{if .Fields.Comment }}{{$k := .Key}}{{range .Fields.Comm
 {{end}}{{end}}`
 
 var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
+    "\x1b[1mURL\x1b[0m: {{.URL}}\n\n" +
 	"{{if .Fields.Status}}\x1b[1mStatus\x1b[0m:\t {{.Fields.Status.Name}}\n{{end}}" +
 	"{{if .Fields.Assignee}}\x1b[1mAssignee:\x1b[0m\t{{.Fields.Assignee.Name}}\n{{end}}\n" +
 	"\x1b[1mTime Remaining/Original Estimate:\x1b[0m\t{{.Fields.PrettyRemaining}} / {{.Fields.PrettyOriginalEstimate}}\n\n" +
@@ -122,6 +123,7 @@ var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t{{if .Fields.IssueType}}[{{.Fields.I
 	"\x1b[1mComments:\x1b[0m\n\n" + commentTemplate
 
 var issueTmplNoColorTxt = "{{.Key}}\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
+    "URL: {{.URL}}\n\n" +
 	"{{if .Fields.Status}}Status:\t {{.Fields.Status.Name}}\n{{end}}" +
 	"{{if .Fields.Assignee}}Assignee:\t{{.Fields.Assignee.Name}}\n{{end}}\n" +
 	"Time Remaining/Original Estimate:\t{{.Fields.PrettyRemaining}} / {{.Fields.PrettyOriginalEstimate}}\n\n" +
