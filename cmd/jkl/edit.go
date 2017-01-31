@@ -39,13 +39,13 @@ func (ecmd *EditCmd) Edit() error {
 	}
 
 	if ecmd.file != "" {
-		iss, err = GetIssueFromFile(ecmd.file, b)
+		iss, err = GetIssueFromFile(ecmd.file, b, iss.EditMeta)
 
 		if err != nil {
 			return err
 		}
 	} else {
-		iss, err = GetIssueFromTmpFile(b)
+		iss, err = GetIssueFromTmpFile(b, iss.EditMeta)
 		if err != nil {
 			return err
 		}

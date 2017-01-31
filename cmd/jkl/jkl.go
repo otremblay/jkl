@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 
 	"strings"
 
@@ -54,6 +55,9 @@ func getCmd(args []string, depth int) (Runner, error) {
 	case "edit":
 		return NewEditCmd(args[1:])
 	case "comment":
+			if strings.Contains(strings.Join(args,""),jkl.CommentIdSeparator){
+			return NewEditCommentCmd(args[1:])
+		}
 		return NewCommentCmd(args[1:])
 	case "edit-comment":
 		return NewEditCommentCmd(args[1:])
@@ -67,6 +71,13 @@ func getCmd(args []string, depth int) (Runner, error) {
 
 		if depth == 0 {
 			// Assume args[0] is a task key
+			if len(args) == 1 {
+				// Default to task info
+				args = append(args, "task")
+			}
+			if verbs[sort.SearchStrings(verbs, args[1])] != args[1] {
+				return &TaskCmd{args}, nil
+			}
 			args[0], args[1] = args[1], args[0]
 			return getCmd(args, depth+1)
 		} else {
@@ -79,6 +90,11 @@ func getCmd(args []string, depth int) (Runner, error) {
 		}
 	}
 	return nil, ErrTaskSubCommandNotFound
+}
+
+var verbs = []string{"list", "create", "task", "edit", "comment","edit-comment"}
+func init(){
+sort.Strings(verbs)
 }
 
 const usage = `Usage:
