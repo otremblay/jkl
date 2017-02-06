@@ -20,6 +20,11 @@ type JiraClient struct {
 	jiraRoot string
 }
 
+func init(){
+	x := false
+	Verbose = &x
+}
+
 func NewJiraClient(jiraRoot string) *JiraClient {
 	j := &JiraClient{
 		&http.Client{
