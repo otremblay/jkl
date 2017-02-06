@@ -17,7 +17,6 @@ import (
 
 	"otremblay.com/jkl"
 )
-
 // def get_editor do
 // 	[System.get_env("EDITOR"), "nano", "vim", "vi"]
 // 	|> Enum.find(nil, fn (ed) -> System.find_executable(ed) != nil end)
@@ -40,7 +39,7 @@ func copyInitial(dst io.WriteSeeker, initial io.Reader) {
 	dst.Seek(0, 0)
 }
 
-func GetIssueFromTmpFile(initial io.Reader) (*jkl.JiraIssue, error) {
+func GetIssueFromTmpFile(initial io.Reader, editMeta *jkl.EditMeta) (*jkl.JiraIssue, error) {
 	f, err := ioutil.TempFile(os.TempDir(), "jkl")
 	if err != nil {
 		return nil, err
@@ -50,7 +49,7 @@ func GetIssueFromTmpFile(initial io.Reader) (*jkl.JiraIssue, error) {
 	if err != nil {
 		return nil, err
 	}
-	return IssueFromReader(f2), nil
+	return IssueFromReader(f2, editMeta), nil
 }
 
 func GetTextFromTmpFile(initial io.Reader) (io.Reader, error) {
@@ -87,7 +86,7 @@ func GetTextFromFile(file *os.File) (io.Reader, error) {
 	return file, err
 }
 
-func GetIssueFromFile(filename string, initial io.Reader) (*jkl.JiraIssue, error) {
+func GetIssueFromFile(filename string, initial io.Reader, editMeta *jkl.EditMeta) (*jkl.JiraIssue, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -99,12 +98,12 @@ func GetIssueFromFile(filename string, initial io.Reader) (*jkl.JiraIssue, error
 	if err != nil {
 		return nil, err
 	}
-	return IssueFromReader(f2), nil
+	return IssueFromReader(f2, editMeta), nil
 }
 
 var spacex = regexp.MustCompile(`\s`)
 
-func IssueFromReader(f io.Reader) *jkl.JiraIssue {
+func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 	iss := &jkl.JiraIssue{Fields: &jkl.Fields{}}
 	riss := reflect.ValueOf(iss).Elem()
 	fieldsField := riss.FieldByName("Fields").Elem()
@@ -155,6 +154,9 @@ func IssueFromReader(f io.Reader) *jkl.JiraIssue {
 			} else {
 				currentField = newfield
 			}
+		} else if editMeta != nil { 
+			// If it's not valid, throw it at the createmeta. It will probably end up in ExtraFields.
+			
 		}
 		if currentField.IsValid() {
 			currentField.SetString(strings.TrimSpace(currentField.String() + "\n" + strings.Join(parts, ":")))
@@ -163,6 +165,6 @@ func IssueFromReader(f io.Reader) *jkl.JiraIssue {
 	return iss
 }
 
-func IssueFromList(list []string) *jkl.JiraIssue {
-	return IssueFromReader(bytes.NewBufferString(strings.Join(list, "\n")))
+func IssueFromList(list []string, editMeta *jkl.EditMeta) *jkl.JiraIssue {
+	return IssueFromReader(bytes.NewBufferString(strings.Join(list, "\n")), editMeta)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"otremblay.com/jkl"
 )
@@ -18,7 +19,12 @@ func (t *TaskCmd) Handle() error {
 		return t.Get(t.args[0])
 	}
 	if c == 2 {
-		return t.Transition(t.args[0], t.args[1])
+		fmt.Println(t.args)
+		err := t.Transition(t.args[0], t.args[1])
+		if err != nil {
+		fmt.Println(err)
+			return t.Log(t.args[0], strings.Join(t.args[1:]," "))
+		}
 	}
 	return ErrTaskSubCommandNotFound
 }
@@ -35,7 +41,11 @@ func (t *TaskCmd) Get(taskKey string) error {
 }
 
 func (t *TaskCmd) Transition(taskKey, transition string) error {
-	return nil
+	return jkl.DoTransition(taskKey, transition)
+}
+
+func (t *TaskCmd) Log(taskKey, time string) error {
+return jkl.LogWork(taskKey, time)
 }
 
 func (t *TaskCmd) Run() error {

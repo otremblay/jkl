@@ -6,6 +6,8 @@ import (
 	"flag"
 	"io"
 	"os"
+	"fmt"
+	"text/template"
 
 	"otremblay.com/jkl"
 )
@@ -14,6 +16,7 @@ type CreateCmd struct {
 	args    []string
 	project string
 	file    string
+	issuetype string
 }
 
 func NewCreateCmd(args []string) (*CreateCmd, error) {
@@ -22,6 +25,7 @@ func NewCreateCmd(args []string) (*CreateCmd, error) {
 	f.StringVar(&ccmd.project, "p", "", "Jira project key")
 	f.StringVar(&ccmd.file, "f", "", "File to get issue description from")
 	f.Parse(args)
+	ccmd.args = f.Args()
 	return ccmd, nil
 }
 
@@ -39,18 +43,32 @@ func (ccmd *CreateCmd) Create() error {
 
 		}
 	}
+	
+	if ccmd.project == "" {
+		return ErrCcmdJiraProjectRequired
+	}
+	isstype := ""
+	if len(ccmd.args) > 0 {
+		isstype = ccmd.args[0]
+	}
+	cm, err := jkl.GetCreateMeta(ccmd.project, isstype)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("Error getting the CreateMeta for project [%s] and issue types [%s]", ccmd.project, isstype), err)
+	}
+	
 	if !readfile {
-		b.WriteString(CREATE_TEMPLATE)
+		createTemplate.Execute(b, cm)
 	}
 	var iss *jkl.JiraIssue
-	var err error
+	// TODO: Evil badbad don't do this.
+	em := &jkl.EditMeta{Fields: cm.Projects[0].IssueTypes[0].Fields}
 	if ccmd.file != "" {
-		iss, err = GetIssueFromFile(ccmd.file, b)
+		iss, err = GetIssueFromFile(ccmd.file, b, em)
 		if err != nil {
 			return err
 		}
 	} else {
-		iss, err = GetIssueFromTmpFile(b)
+		iss, err = GetIssueFromTmpFile(b, em)
 		if err != nil {
 			return err
 		}
@@ -60,13 +78,24 @@ func (ccmd *CreateCmd) Create() error {
 		(iss.Fields.Project == nil || iss.Fields.Project.Key == "") {
 		iss.Fields.Project = &jkl.Project{Key: ccmd.project}
 	}
-	return jkl.Create(iss)
+	iss, err = jkl.Create(iss)
+	if err != nil {
+		return err
+	}
+	fmt.Println(iss.Key)
+	return nil
 }
 
 func (ccmd *CreateCmd) Run() error {
 	return ccmd.Create()
 }
 
-const CREATE_TEMPLATE = `Issue Type:
+var createTemplate = template.Must(template.New("createissue").Parse(`{{range .Projects -}}
+Project: {{.Key}}
+{{range .IssueTypes -}}
+Issue Type: {{.Name}}
 Summary:
-Description:`
+Description:
+{{.RangeFieldSpecs}}
+{{end}}
+{{end}}`))
