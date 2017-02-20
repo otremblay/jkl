@@ -15,6 +15,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func init() {
+	x := false
+	Verbose = &x
+}
+
 var Verbose *bool
 var defaultIssue = &JiraIssue{}
 
@@ -61,9 +66,10 @@ func GetCreateMeta(projectKey, issueType string) (*CreateMeta, error) {
 		return nil, err
 	}
 	b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
+
+	if err != nil {
+		return nil, err
+	}
 	if resp.StatusCode >= 400 {
 		fmt.Println("Status code:", resp.StatusCode)
 		fmt.Println("Response:")
@@ -134,7 +140,8 @@ func List(jql string) ([]*JiraIssue, error) {
 
 func GetIssue(taskKey string) (*JiraIssue, error) {
 	bootHttpClient()
-	path := "api/2/issue/" + taskKey+"?expand=transitions,operations,editmeta"
+
+	path := "api/2/issue/" + taskKey + "?expand=transitions,operations,editmeta"
 	resp, err := httpClient.Get(path)
 	if err != nil {
 		return nil, err

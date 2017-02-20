@@ -2,16 +2,16 @@ package jkl
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"reflect"
-	"strings"
-	"encoding/json"
-	"text/template"
-	"sort"
 	"regexp"
+	"sort"
+	"strings"
+	"text/template"
 )
 
 type Search struct {
@@ -20,6 +20,7 @@ type Search struct {
 
 type IssueType struct {
 	Name   string `json:"name"`
+	IconURL string `json:",omitempty"`
 	Fields map[string]*FieldSpec
 }
 
@@ -92,6 +93,7 @@ type CommentColl struct {
 
 type Status struct {
 	Name string
+	IconURL string `json:",omitempty"`
 }
 
 type TimeTracking struct {
