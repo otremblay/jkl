@@ -1,0 +1,12 @@
+{
+	"ImportPath": "github.com/avanier/jkl",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/joho/godotenv",
+			"Comment": "v1.1-23-gc9360df",
+			"Rev": "c9360df4d16dc0e391ea2f28da2d31a9ede2e26f"
+		}
+	]
+}
