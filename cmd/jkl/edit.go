@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"os"
 
 	"text/template"
@@ -21,9 +22,9 @@ func NewEditCmd(args []string) (*EditCmd, error) {
 	ccmd := &EditCmd{project: os.Getenv("JIRA_PROJECT")}
 	f := flag.NewFlagSet("x", flag.ExitOnError)
 	f.StringVar(&ccmd.project, "p", "", "Jira project key")
-	f.StringVar(&ccmd.file, "f", "filename", "File to get issue description from")
+	f.StringVar(&ccmd.file, "f", "", "File to get issue description from")
 	f.Parse(args)
-	ccmd.taskKey = flag.Arg(0)
+	ccmd.taskKey = f.Arg(0)
 	return ccmd, nil
 }
 
@@ -31,7 +32,7 @@ func (ecmd *EditCmd) Edit() error {
 	b := bytes.NewBuffer(nil)
 	iss, err := jkl.GetIssue(ecmd.taskKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("Edit failed: %v", err)
 	}
 	err = editTmpl.Execute(b, iss)
 	if err != nil {
@@ -42,12 +43,12 @@ func (ecmd *EditCmd) Edit() error {
 		iss, err = GetIssueFromFile(ecmd.file, b, iss.EditMeta)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("Error getting issue from file: %v", err)
 		}
 	} else {
 		iss, err = GetIssueFromTmpFile(b, iss.EditMeta)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error getting issue from temp file: %v", err)
 		}
 
 	}

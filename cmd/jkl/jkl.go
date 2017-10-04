@@ -14,6 +14,7 @@ import (
 
 var verbose = flag.Bool("v", false, "Output debug information about jkl")
 var help = flag.Bool("h", false, "Outputs usage information message")
+var SilentMode = flag.Bool("s", false, "Silent execution.")
 
 func main() {
 	jkl.FindRCFile()

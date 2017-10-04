@@ -15,13 +15,15 @@ import (
 )
 
 type Search struct {
-	Issues []*JiraIssue `json:"issues"`
+	Issues     []*JiraIssue `json:"issues"`
+	Total      int
+	MaxResults int
 }
 
 type IssueType struct {
-	Name   string `json:"name"`
+	Name    string `json:"name"`
 	IconURL string `json:",omitempty"`
-	Fields map[string]*FieldSpec
+	Fields  map[string]*FieldSpec
 }
 
 func (it *IssueType) RangeFieldSpecs() string {
@@ -38,12 +40,12 @@ func (it *IssueType) RangeFieldSpecs() string {
 }
 
 type AllowedValue struct {
-	Id string
-	Self string
+	Id    string
+	Self  string
 	Value string
 }
 
-func (a *AllowedValue) String() string{
+func (a *AllowedValue) String() string {
 	return a.Value
 }
 
@@ -51,16 +53,14 @@ type FieldSpec struct {
 	Name     string
 	Required bool
 	Schema   struct {
-		Type string
-		Custom string
+		Type     string
+		Custom   string
 		CustomId int
-		Items string
+		Items    string
 	}
-	Operations []string
+	Operations    []string
 	AllowedValues []*AllowedValue
-	
 }
-
 
 type CreateMeta struct {
 	Projects []*Project
@@ -68,7 +68,7 @@ type CreateMeta struct {
 
 type Project struct {
 	Key        string `json:"key,omitempty"`
-	Name string
+	Name       string
 	IssueTypes []*IssueType
 }
 
@@ -82,9 +82,9 @@ func (a *Author) String() string {
 }
 
 type Comment struct {
-	Id     string `json:"id"`
+	Id     string  `json:"id"`
 	Author *Author `json:"author"`
-	Body   string `json:"body"`
+	Body   string  `json:"body"`
 }
 
 type CommentColl struct {
@@ -92,7 +92,7 @@ type CommentColl struct {
 }
 
 type Status struct {
-	Name string
+	Name    string
 	IconURL string `json:",omitempty"`
 }
 
@@ -107,14 +107,14 @@ func (a *Attachment) String() string {
 
 type Attachment struct {
 	Filename string
-	Author *Author
-	Content string
+	Author   *Author
+	Content  string
 }
 
 type LinkType struct {
-	Id string
-	Name string
-	Inward string
+	Id      string
+	Name    string
+	Inward  string
 	Outward string
 }
 
@@ -129,8 +129,8 @@ func (i *IssueLink) String() string {
 }
 
 type IssueLink struct {
-	LinkType *LinkType `json:"type"`
-	InwardIssue *JiraIssue
+	LinkType     *LinkType `json:"type"`
+	InwardIssue  *JiraIssue
 	OutwardIssue *JiraIssue
 }
 
@@ -139,18 +139,18 @@ func (w *Worklog) String() string {
 }
 
 type Worklog struct {
-	Author *Author
-	Comment string
-	TimeSpent string
+	Author           *Author
+	Comment          string
+	TimeSpent        string
 	TimeSpentSeconds int
-	Started string
+	Started          string
 }
 
 type Worklogs struct {
 	Worklogs []*Worklog `json:",omitempty"`
 }
 
-func (f *Fields) UnmarshalJSON(b []byte) error{
+func (f *Fields) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &f.rawFields)
 	if err != nil {
 		fmt.Println("splosion")
@@ -159,16 +159,18 @@ func (f *Fields) UnmarshalJSON(b []byte) error{
 	f.rawExtraFields = map[string]json.RawMessage{}
 	vf := reflect.ValueOf(f).Elem()
 	for key, mess := range f.rawFields {
-		field := vf.FieldByNameFunc(func(s string)bool{return strings.ToLower(key) == strings.ToLower(s)})
+		field := vf.FieldByNameFunc(func(s string) bool { return strings.ToLower(key) == strings.ToLower(s) })
 		if field.IsValid() {
-		    objType := field.Type()
-    		obj := reflect.New(objType).Interface()
+			objType := field.Type()
+			obj := reflect.New(objType).Interface()
 			err := json.Unmarshal(mess, &obj)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, objType, obj, string(mess))
-				fmt.Fprintln(os.Stderr, errors.New(fmt.Sprintf("%s [%s]: %s","Error allocating field",key, err)))
+				fmt.Fprintln(os.Stderr, errors.New(fmt.Sprintf("%s [%s]: %s", "Error allocating field", key, err)))
 			}
-			field.Set(reflect.ValueOf(obj).Elem())
+			if obj != nil && !(reflect.ValueOf(obj) == reflect.Zero(reflect.TypeOf(obj))) {
+				field.Set(reflect.ValueOf(obj).Elem())
+			}
 		} else {
 			f.rawExtraFields[key] = mess
 		}
@@ -182,22 +184,22 @@ type Priority struct {
 }
 
 type Fields struct {
-	*IssueType   `json:"issuetype,omitempty"`
-	Assignee     *Author       `json:",omitempty"`
-	Project      *Project      `json:"project,omitempty"`
-	Summary      string        `json:"summary,omitempty"`
-	Description  string        `json:"description,omitempty"`
-	Comment      *CommentColl  `json:"comment,omitempty"`
-	Parent       *JiraIssue    `json:",omitempty"`
-	Status       *Status       `json:",omitempty"`
-	TimeTracking *TimeTracking `json:"timetracking,omitempty"`
-	Attachment   []*Attachment   `json:"attachment,omitempty"`
-	IssueLinks   []*IssueLink    `json:"issueLinks,omitempty"`
-	Priority     *Priority `json:",omitempty"`
-	Worklog *Worklogs `json:"worklog,omitempty"`
-	rawFields map[string]json.RawMessage
+	*IssueType     `json:"issuetype,omitempty"`
+	Assignee       *Author       `json:",omitempty"`
+	Project        *Project      `json:"project,omitempty"`
+	Summary        string        `json:"summary,omitempty"`
+	Description    string        `json:"description,omitempty"`
+	Comment        *CommentColl  `json:"comment,omitempty"`
+	Parent         *JiraIssue    `json:",omitempty"`
+	Status         *Status       `json:",omitempty"`
+	TimeTracking   *TimeTracking `json:"timetracking,omitempty"`
+	Attachment     []*Attachment `json:"attachment,omitempty"`
+	IssueLinks     []*IssueLink  `json:"issueLinks,omitempty"`
+	Priority       *Priority     `json:",omitempty"`
+	Worklog        *Worklogs     `json:"worklog,omitempty"`
+	rawFields      map[string]json.RawMessage
 	rawExtraFields map[string]json.RawMessage
-	ExtraFields map[string]interface{} `json:"-"`
+	ExtraFields    map[string]interface{} `json:"-"`
 }
 
 func (f *Fields) PrettyRemaining() string {
@@ -218,41 +220,37 @@ func PrettySeconds(seconds int) string {
 	return fmt.Sprintf("%dd %2dh %2dm %2ds", days, hours, minutes, seconds)
 }
 
-type Transition struct{
-	Id string `json:"id"`
+type Transition struct {
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
-
 type Schema struct {
-	System string
-	Custom string
+	System   string
+	Custom   string
 	CustomId int
 }
-
 
 type EditMeta struct {
 	Fields map[string]*FieldSpec
 }
 
-
-
 type JiraIssue struct {
-	Key    string  `json:"key,omitempty"`
-	Fields *Fields `json:"fields,omitempty"`
+	Key         string        `json:"key,omitempty"`
+	Fields      *Fields       `json:"fields,omitempty"`
 	Transitions []*Transition `json:"transitions,omitempty"`
-	EditMeta *EditMeta `json:"editmeta,omitempty"`
+	EditMeta    *EditMeta     `json:"editmeta,omitempty"`
 }
 
+var sprintRegexp = regexp.MustCompile(`name=([^,]+),`)
 
-var sprintRegexp =  regexp.MustCompile(`name=([^,]+),`)
 func (i *JiraIssue) UnmarshalJSON(b []byte) error {
 	tmp := map[string]json.RawMessage{}
 	if len(b) == 0 {
 		return nil
 	}
 	i.Fields = &Fields{}
-	i.EditMeta = &EditMeta{Fields:map[string]*FieldSpec{}}
+	i.EditMeta = &EditMeta{Fields: map[string]*FieldSpec{}}
 	err := json.Unmarshal(b, &tmp)
 	if err != nil && *Verbose {
 		fmt.Fprintln(os.Stderr, errors.New(fmt.Sprintf("%s: %s", "Error unpacking raw json", err)))
@@ -263,10 +261,10 @@ func (i *JiraIssue) UnmarshalJSON(b []byte) error {
 	}
 	err = json.Unmarshal(tmp["transitions"], &i.Transitions)
 	if err != nil && *Verbose {
-		fmt.Fprintln(os.Stderr,  errors.New(fmt.Sprintf("%s: %s", "Error unpacking transitions", err)))
+		fmt.Fprintln(os.Stderr, errors.New(fmt.Sprintf("%s: %s", "Error unpacking transitions", err)))
 	}
 	err = json.Unmarshal(tmp["editmeta"], &i.EditMeta)
-	if err != nil && *Verbose{
+	if err != nil && *Verbose {
 		fmt.Fprintln(os.Stderr, errors.New(fmt.Sprintf("%s: %s", "Error unpacking EditMeta", err)))
 	}
 	err = json.Unmarshal(tmp["key"], &i.Key)
@@ -282,34 +280,39 @@ func (i *JiraIssue) UnmarshalJSON(b []byte) error {
 				if len(results) == 2 {
 					i.Fields.ExtraFields[k] = results[1]
 				}
-			} else {switch f.Schema.Type {
-			case "user":
-				a := &Author{}
-				json.Unmarshal(v, &a)
-				i.Fields.ExtraFields[k] = a
-		    case "option":
-		    	val := &AllowedValue{}
-		    	err = json.Unmarshal(v, &val)
-		    	if err != nil {panic(err)}
-		    	i.Fields.ExtraFields[k] = val
-		    case "array":
-		    	if f.Schema.Items == "option" {
-		    		val := []*AllowedValue{}
-		    		err = json.Unmarshal(v, &val)
-		    		if err != nil {panic(err)}
-		    		i.Fields.ExtraFields[k] = val
-		    		continue
-		    	}
-		    	fallthrough
-			default:
-				if string(v) != "null" {
-				i.Fields.ExtraFields[k] = string(v)
+			} else {
+				switch f.Schema.Type {
+				case "user":
+					a := &Author{}
+					json.Unmarshal(v, &a)
+					i.Fields.ExtraFields[k] = a
+				case "option":
+					val := &AllowedValue{}
+					err = json.Unmarshal(v, &val)
+					if err != nil {
+						panic(err)
+					}
+					i.Fields.ExtraFields[k] = val
+				case "array":
+					if f.Schema.Items == "option" {
+						val := []*AllowedValue{}
+						err = json.Unmarshal(v, &val)
+						if err != nil {
+							panic(err)
+						}
+						i.Fields.ExtraFields[k] = val
+						continue
+					}
+					fallthrough
+				default:
+					if string(v) != "null" {
+						i.Fields.ExtraFields[k] = string(v)
+					}
 				}
-			}
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -331,7 +334,21 @@ func (i *JiraIssue) String() string {
 	return b.String()
 }
 
-func (i *JiraIssue) PrintExtraFields() string{
+func (i *JiraIssue) EFByName(name string) string {
+	for k, f := range i.EditMeta.Fields {
+		if f.Name == name {
+			return fmt.Sprint(i.Fields.ExtraFields[k])
+		}
+	}
+
+	return ""
+}
+
+func (i *JiraIssue) StoryPoints() string {
+	return i.EFByName("Story Points")
+}
+
+func (i *JiraIssue) PrintExtraFields() string {
 	sorter := map[string]string{}
 	b := bytes.NewBuffer(nil)
 	for k, v := range i.Fields.ExtraFields {
@@ -350,7 +367,7 @@ func (i *JiraIssue) PrintExtraFields() string{
 	return b.String()
 }
 
-var commentTemplate = `{{if .Fields.Comment }}{{$k := .Key}}{{range .Fields.Comment.Comments}}{{.Author.DisplayName}} [~{{.Author.Name}}] ({{$k}}`+CommentIdSeparator+`{{.Id}}):
+var commentTemplate = `{{if .Fields.Comment }}{{$k := .Key}}{{range .Fields.Comment.Comments}}{{.Author.DisplayName}} [~{{.Author.Name}}] ({{$k}}` + CommentIdSeparator + `{{.Id}}):
 -----------------
 {{.Body}}
 -----------------
@@ -358,30 +375,40 @@ var commentTemplate = `{{if .Fields.Comment }}{{$k := .Key}}{{range .Fields.Comm
 {{end}}{{end}}`
 
 var issueTmplTxt = "\x1b[1m{{.Key}}\x1b[0m\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
-    "\x1b[1mURL\x1b[0m: {{.URL}}\n\n" +
+	"\x1b[1mURL\x1b[0m: {{.URL}}\n\n" +
 	"{{if .Fields.Status}}\x1b[1mStatus\x1b[0m:\t {{.Fields.Status.Name}}\n{{end}}" +
 	"{{if .Fields.Priority}}\x1b[1mStatus\x1b[0m:\t {{.Fields.Priority.Name}}\n{{end}}" +
-	"\x1b[1mTransitions\x1b[0m: {{range .Transitions}}[{{.Name}}] {{end}}\n"+
+	"\x1b[1mTransitions\x1b[0m: {{range .Transitions}}[{{.Name}}] {{end}}\n" +
 	"{{if .Fields.Assignee}}\x1b[1mAssignee:\x1b[0m\t{{.Fields.Assignee.Name}}\n{{end}}\n" +
 	"\x1b[1mTime Remaining/Original Estimate:\x1b[0m\t{{.Fields.PrettyRemaining}} / {{.Fields.PrettyOriginalEstimate}}\n\n" +
-	"{{$i := .}}{{range $k, $v := .Fields.ExtraFields}}{{with index $i.EditMeta.Fields $k}}\x1b[1m{{.Name}}\x1b[0m{{end}}: {{$v}}\n{{end}}\n\n"+
+	"{{$i := .}}{{range $k, $v := .Fields.ExtraFields}}{{with index $i.EditMeta.Fields $k}}\x1b[1m{{.Name}}\x1b[0m{{end}}: {{$v}}\n{{end}}\n\n" +
 	"\x1b[1mDescription:\x1b[0m   {{.Fields.Description}} \n\n" +
-	"\x1b[1mIssue Links\x1b[0m: \n{{range .Fields.IssueLinks}}\t{{.}}\n{{end}}\n\n" + 
+	"\x1b[1mIssue Links\x1b[0m: \n{{range .Fields.IssueLinks}}\t{{.}}\n{{end}}\n\n" +
 	"\x1b[1mComments:\x1b[0m\n\n" + commentTemplate +
 	"Worklog:\n{{range .Fields.Worklog.Worklogs}}\t{{.}}\n{{end}}"
 
 var issueTmplNoColorTxt = "{{.Key}}\t{{if .Fields.IssueType}}[{{.Fields.IssueType.Name}}]{{end}}\t{{.Fields.Summary}}\n\n" +
-    "URL: {{.URL}}\n\n" +
+	"URL: {{.URL}}\n\n" +
 	"{{if .Fields.Status}}Status:\t {{.Fields.Status.Name}}\n{{end}}" +
-	"Transitions: {{range .Transitions}}[{{.Name}}] {{end}}\n"+
+	"Transitions: {{range .Transitions}}[{{.Name}}] {{end}}\n" +
 	"{{if .Fields.Assignee}}Assignee:\t{{.Fields.Assignee.Name}}\n{{end}}\n" +
 	"Time Remaining/Original Estimate:\t{{.Fields.PrettyRemaining}} / {{.Fields.PrettyOriginalEstimate}}\n\n" +
-	"{{.PrintExtraFields}}\n\n"+
+	"{{.PrintExtraFields}}\n\n" +
 	"Description:   {{.Fields.Description}} \n\n" +
-	"Issue Links: \n{{range .Fields.IssueLinks}}\t{{.}}\n{{end}}\n\n" + 
-	"Comments:\n\n" + commentTemplate+
+	"Issue Links: \n{{range .Fields.IssueLinks}}\t{{.}}\n{{end}}\n\n" +
+	"Comments:\n\n" + commentTemplate +
 	"Worklog:\n{{range .Fields.Worklog.Worklogs}}\t{{.}}\n{{end}}"
 
 var CommentIdSeparator = "~"
-var issueTmpl = template.Must(template.New("issueTmpl").Parse(issueTmplTxt))
-var issueTmplNoColor = template.Must(template.New("issueTmplNoColor").Parse(issueTmplNoColorTxt))
+var issueTmpl, issueTmplNoColor *template.Template
+
+func SetupTmpl() {
+	isstmpl := os.Getenv("JKL_ISSUE_TMPL")
+	if isstmpl != "" {
+		issueTmpl = template.Must(template.New("issueTmpl").Parse(isstmpl))
+		issueTmplNoColor = issueTmpl
+	} else {
+		issueTmpl = template.Must(template.New("issueTmpl").Parse(issueTmplTxt))
+		issueTmplNoColor = template.Must(template.New("issueTmplNoColor").Parse(issueTmplNoColorTxt))
+	}
+}
