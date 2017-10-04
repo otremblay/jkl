@@ -12,7 +12,8 @@ hell
 Issue Type: Sometype
 this is ignored
 Summary: Dookienator
-also ignored`, "\n"))
+also ignored`, "\n"), nil)
+
 	AssertEqual(t, `Cowboys
  from
 hell`, iss.Fields.Description)
@@ -33,4 +34,14 @@ Actual: %v`, expected, actual)
 
 func Assert(t *testing.T, fn func() bool) {
 
+}
+
+func TestIssueFromFile(t *testing.T) {
+	*SilentMode = true
+	issue, err := GetIssueFromFile("editor_test_file.issue", nil, nil)
+	if err != nil {
+		t.Errorf("Apparently we effed up some! --> %v", err)
+	}
+	AssertEqual(t, "Dookie", issue.Fields.Summary)
+	AssertEqual(t, "McDoogal", issue.Fields.Description)
 }

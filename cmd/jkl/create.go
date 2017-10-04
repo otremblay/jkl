@@ -4,19 +4,20 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
-	"fmt"
 	"text/template"
 
 	"otremblay.com/jkl"
 )
 
 type CreateCmd struct {
-	args    []string
-	project string
-	file    string
+	args      []string
+	project   string
+	file      string
 	issuetype string
+	silent    bool
 }
 
 func NewCreateCmd(args []string) (*CreateCmd, error) {

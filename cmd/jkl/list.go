@@ -39,6 +39,9 @@ func (l *listissue) Color() string {
 	}
 	return ""
 }
+func (l *listissue) EFByName(name string) string {
+	return (*jkl.JiraIssue)(l).EFByName(name)
+}
 
 type ListCmd struct {
 	args    []string
@@ -76,7 +79,7 @@ func (l *ListCmd) List() error {
 	if issues, err := jkl.List(strings.Join(l.args, " ")); err != nil {
 		return err
 	} else {
-		for _, issue := range issues {
+		for issue := range issues {
 			var li listissue
 			li = listissue(*issue)
 			err := l.tmpl.Execute(os.Stdout, &li)

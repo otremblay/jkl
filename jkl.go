@@ -239,6 +239,7 @@ func DoTransition(taskKey string, transitionName string) error {
 }
 
 func LogWork(taskKey string, workAmount string) error {
+	bootHttpClient()
 	payload, err := serializePayload(map[string]interface{}{"timeSpent": workAmount})
 	resp, err := httpClient.Post("api/2/issue/"+taskKey+"/worklog", payload)
 	if err != nil {

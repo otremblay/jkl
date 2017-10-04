@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"reflect"
 
@@ -17,6 +18,7 @@ import (
 
 	"otremblay.com/jkl"
 )
+
 // def get_editor do
 // 	[System.get_env("EDITOR"), "nano", "vim", "vi"]
 // 	|> Enum.find(nil, fn (ed) -> System.find_executable(ed) != nil end)
@@ -42,12 +44,12 @@ func copyInitial(dst io.WriteSeeker, initial io.Reader) {
 func GetIssueFromTmpFile(initial io.Reader, editMeta *jkl.EditMeta) (*jkl.JiraIssue, error) {
 	f, err := ioutil.TempFile(os.TempDir(), "jkl")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error opening tempfile: %v", err)
 	}
 	copyInitial(f, initial)
 	f2, err := GetTextFromFile(f)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error reading tempfile: %v", err)
 	}
 	return IssueFromReader(f2, editMeta), nil
 }
@@ -73,16 +75,19 @@ func GetTextFromSpecifiedFile(filename string, initial io.Reader) (io.Reader, er
 }
 
 func GetTextFromFile(file *os.File) (io.Reader, error) {
-	cmd := exec.Command(GetEditor(), file.Name())
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
+	var err error
+	if !*SilentMode {
+		cmd := exec.Command(GetEditor(), file.Name())
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		_, err = file.Seek(0, 0)
 	}
-	_, err = file.Seek(0, 0)
 	return file, err
 }
 
@@ -108,6 +113,7 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 	riss := reflect.ValueOf(iss).Elem()
 	fieldsField := riss.FieldByName("Fields").Elem()
 	currentField := reflect.Value{}
+	currFieldName := ""
 	brd := bufio.NewReader(f)
 	for {
 		b, _, err := brd.ReadLine()
@@ -131,6 +137,7 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 				if len(parts) > 0 {
 					iss.Fields.IssueType = &jkl.IssueType{}
 					currentField = reflect.Value{}
+					currFieldName = potentialField
 					f2 := newfield.Elem()
 					f3 := f2.FieldByName("Name")
 					f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
@@ -139,6 +146,7 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 				if len(parts) > 0 {
 					iss.Fields.Project = &jkl.Project{}
 					currentField = reflect.Value{}
+					currFieldName = potentialField
 					f2 := newfield.Elem()
 					f3 := f2.FieldByName("Key")
 					f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
@@ -147,19 +155,27 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 				if len(parts) > 0 {
 					iss.Fields.Parent = &jkl.JiraIssue{}
 					currentField = reflect.Value{}
+					currFieldName = potentialField
 					f2 := newfield.Elem()
 					f3 := f2.FieldByName("Key")
 					f3.SetString(strings.TrimSpace(strings.Join(parts, ":")))
 				}
 			} else {
+				currFieldName = potentialField
 				currentField = newfield
 			}
-		} else if editMeta != nil { 
+		} else if editMeta != nil {
 			// If it's not valid, throw it at the createmeta. It will probably end up in ExtraFields.
-			
+
 		}
 		if currentField.IsValid() {
-			currentField.SetString(strings.TrimSpace(currentField.String() + "\n" + strings.Join(parts, ":")))
+			newString := currentField.String() + "\n" + strings.Join(parts, ":")
+			if currFieldName != "Description" {
+				newString = strings.TrimSpace(newString)
+			} else if currentField.String() == "" {
+				newString = strings.TrimLeftFunc(newString, unicode.IsSpace)
+			}
+			currentField.SetString(newString)
 		}
 	}
 	return iss
