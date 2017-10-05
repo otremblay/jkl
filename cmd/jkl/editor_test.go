@@ -12,7 +12,7 @@ hell
 Issue Type: Sometype
 this is ignored
 Summary: Dookienator
-also ignored`, "\n"))
+also ignored`, "\n"), nil)
 	AssertEqual(t, `Cowboys
  from
 hell`, iss.Fields.Description)
