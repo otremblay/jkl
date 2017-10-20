@@ -1,12 +1,47 @@
 {
-	"ImportPath": "github.com/avanier/jkl",
-	"GoVersion": "go1.8",
+	"ImportPath": "otremblay.com/jkl",
+	"GoVersion": "go1.9",
 	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
+		{
+			"ImportPath": "github.com/hanwen/go-fuse/fuse",
+			"Comment": "v20170619-21-gcf21bc2",
+			"Rev": "cf21bc21cac77db799fff95d80e717908e6356a5"
+		},
+		{
+			"ImportPath": "github.com/hanwen/go-fuse/fuse/nodefs",
+			"Comment": "v20170619-21-gcf21bc2",
+			"Rev": "cf21bc21cac77db799fff95d80e717908e6356a5"
+		},
+		{
+			"ImportPath": "github.com/hanwen/go-fuse/fuse/pathfs",
+			"Comment": "v20170619-21-gcf21bc2",
+			"Rev": "cf21bc21cac77db799fff95d80e717908e6356a5"
+		},
+		{
+			"ImportPath": "github.com/hanwen/go-fuse/splice",
+			"Comment": "v20170619-21-gcf21bc2",
+			"Rev": "cf21bc21cac77db799fff95d80e717908e6356a5"
+		},
 		{
 			"ImportPath": "github.com/joho/godotenv",
 			"Comment": "v1.1-23-gc9360df",
 			"Rev": "c9360df4d16dc0e391ea2f28da2d31a9ede2e26f"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/terminal",
+			"Rev": "541b9d50ad47e36efd8fb423e938e59ff1691f68"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "8dbc5d05d6edcc104950cc299a1ce6641235bc86"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/windows",
+			"Rev": "8dbc5d05d6edcc104950cc299a1ce6641235bc86"
 		}
 	]
 }
