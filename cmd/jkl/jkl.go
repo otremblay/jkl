@@ -55,7 +55,7 @@ func getCmd(args []string, depth int) (Runner, error) {
 	case "edit":
 		return NewEditCmd(args[1:])
 	case "comment":
-			if strings.Contains(strings.Join(args,""),jkl.CommentIdSeparator){
+		if strings.Contains(strings.Join(args, ""), jkl.CommentIdSeparator) {
 			return NewEditCommentCmd(args[1:])
 		}
 		return NewCommentCmd(args[1:])
@@ -80,21 +80,21 @@ func getCmd(args []string, depth int) (Runner, error) {
 			}
 			args[0], args[1] = args[1], args[0]
 			return getCmd(args, depth+1)
-		} else {
-			// Swapping the first two args didn't help;
-			// this means it's a transition.
-
-			// tcmd, err := NewTransitionCommand(args)
-			// if err != nil {return nil, err}
-			// return tcmd, nil
 		}
+		// Swapping the first two args didn't help;
+		// this means it's a transition.
+
+		// tcmd, err := NewTransitionCommand(args)
+		// if err != nil {return nil, err}
+		// return tcmd, nil
 	}
 	return nil, ErrTaskSubCommandNotFound
 }
 
-var verbs = []string{"list", "create", "task", "edit", "comment","edit-comment"}
-func init(){
-sort.Strings(verbs)
+var verbs = []string{"list", "create", "task", "edit", "comment", "edit-comment"}
+
+func init() {
+	sort.Strings(verbs)
 }
 
 const usage = `Usage:
