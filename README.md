@@ -1,6 +1,7 @@
 # jkl
-
-TODO: Write a project description
+jkl is a library for programmatically interacting with a JIRA installation.  It
+comes with a command line program (also called `jkl`) which allows you to
+interact with JIRA via the command line.
 
 ## Installation
 
