@@ -3,8 +3,16 @@
 TODO: Write a project description
 
 ## Installation
+To use the library, simply import it into your application:
+`import "github.com/otremblay/jkl"`
 
-TODO: Describe the installation process
+To install the command line application:
+First, make sure you have a working go environment:
+https://golang.org/doc/install
+
+Then, execute the following command from your shell:
+
+`$ go get github.com/otremblay/jkl/cmd/jkl`
 
 ## Usage
 
