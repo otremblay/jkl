@@ -21,6 +21,9 @@ func (l *listissue) URL() string {
 }
 
 func (l *listissue) Color() string {
+	if l.Fields == nil || l.Fields.Status == nil {
+		return ""
+	}
 	if os.Getenv("JKLNOCOLOR") == "true" || !terminal.IsTerminal(int(os.Stdout.Fd())) {
 		return ""
 	}
@@ -52,7 +55,7 @@ func NewListCmd(args []string) (*ListCmd, error) {
 	if *verbose {
 		fmt.Println(&ccmd.tmplstr)
 	}
-	f.StringVar(&ccmd.tmplstr, "listTemplate", "{{.Color}}{{.Key}}{{if .Color}}\x1b[39m{{end}}\t({{.Fields.IssueType.Name}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\t{{if .Fields.Assignee}}[{{.Fields.Assignee.Name}}]{{end}}\n", "Go template used in list command")
+	f.StringVar(&ccmd.tmplstr, "listTemplate", "{{.Color}}{{.Key}}{{if .Color}}\x1b[39m{{end}}\t({{if .Fields.IssueType}}{{.Fields.IssueType.Name}}{{end}}{{if .Fields.Parent}} of {{.Fields.Parent.Key}}{{end}})\t{{.Fields.Summary}}\t{{if .Fields.Assignee}}[{{.Fields.Assignee.Name}}]{{end}}\n", "Go template used in list command")
 	f.Parse(args)
 	ccmd.args = f.Args()
 	if len(ccmd.args) == 0 {

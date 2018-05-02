@@ -55,12 +55,20 @@ func getCmd(args []string, depth int) (Runner, error) {
 	case "edit":
 		return NewEditCmd(args[1:])
 	case "comment":
-			if strings.Contains(strings.Join(args,""),jkl.CommentIdSeparator){
+		if strings.Contains(strings.Join(args, ""), jkl.CommentIdSeparator) {
 			return NewEditCommentCmd(args[1:])
 		}
 		return NewCommentCmd(args[1:])
 	case "edit-comment":
 		return NewEditCommentCmd(args[1:])
+	case "assign":
+		return NewAssignCmd(args[1:])
+	case "flag":
+		return NewFlagCmd(args[1:], true)
+	case "unflag":
+		return NewFlagCmd(args[1:], false)
+	case "link":
+		return NewLinkCmd(args[1:])
 	default:
 		// Think about this real hard.
 		// I want `jkl JIRA-1234 done` to move it to done.
@@ -92,9 +100,10 @@ func getCmd(args []string, depth int) (Runner, error) {
 	return nil, ErrTaskSubCommandNotFound
 }
 
-var verbs = []string{"list", "create", "task", "edit", "comment","edit-comment"}
-func init(){
-sort.Strings(verbs)
+var verbs = []string{"list", "create", "task", "edit", "comment", "edit-comment"}
+
+func init() {
+	sort.Strings(verbs)
 }
 
 const usage = `Usage:

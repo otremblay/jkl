@@ -17,6 +17,7 @@ import (
 
 	"otremblay.com/jkl"
 )
+
 // def get_editor do
 // 	[System.get_env("EDITOR"), "nano", "vim", "vi"]
 // 	|> Enum.find(nil, fn (ed) -> System.find_executable(ed) != nil end)
@@ -154,12 +155,17 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 			} else {
 				currentField = newfield
 			}
-		} else if editMeta != nil { 
+		} else if editMeta != nil {
 			// If it's not valid, throw it at the createmeta. It will probably end up in ExtraFields.
-			
+
 		}
 		if currentField.IsValid() {
-			currentField.SetString(strings.TrimSpace(currentField.String() + "\n" + strings.Join(parts, ":")))
+			newpart := strings.Join(parts, ":")
+			newvalue := currentField.String() + "\n" + newpart
+			if strings.TrimSpace(newpart) != "" {
+				newvalue = strings.TrimSpace(newvalue)
+			}
+			currentField.SetString(newvalue)
 		}
 	}
 	return iss

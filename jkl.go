@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -243,6 +244,76 @@ func LogWork(taskKey string, workAmount string) error {
 	resp, err := httpClient.Post("api/2/issue/"+taskKey+"/worklog", payload)
 	if err != nil {
 		fmt.Println(resp.StatusCode)
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		io.Copy(os.Stderr, resp.Body)
+	}
+	return nil
+}
+
+func Assign(taskKey string, user string) error {
+	bootHttpClient()
+	payload, err := serializePayload(map[string]interface{}{"name": user})
+	resp, err := httpClient.Put("api/2/issue/"+taskKey+"/assignee", payload)
+	if err != nil {
+		fmt.Println(resp.StatusCode)
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		io.Copy(os.Stderr, resp.Body)
+	}
+	return nil
+}
+
+func FlagIssue(taskKeys []string, flg bool) error {
+	bootHttpClient()
+	payload, err := serializePayload(map[string]interface{}{"issueKeys": taskKeys, "flag": flg})
+	req, err := http.NewRequest("POST", "", payload)
+
+	if err != nil {
+		return err
+	}
+	req.URL, err = url.Parse(httpClient.jiraRoot + "rest/" + "greenhopper/1.0/xboard/issue/flag/flag.json")
+	if err != nil {
+		return err
+	}
+	resp, err := httpClient.DoLess(req)
+	if err != nil {
+		fmt.Println(resp.StatusCode)
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		io.Copy(os.Stderr, resp.Body)
+	}
+	return nil
+}
+
+type msi map[string]interface{}
+
+func LinkIssue(params []string) error {
+	bootHttpClient()
+	if len(params) == 0 {
+		resp, err := httpClient.Get("api/2/issueLinkType")
+		if err != nil {
+			if resp != nil {
+				fmt.Println(resp.StatusCode)
+			}
+			return err
+		}
+		io.Copy(os.Stdout, resp.Body)
+		return nil
+	}
+	payload, err := serializePayload(msi{
+		"type":         msi{"name": strings.Join(params[1:len(params)-1], " ")},
+		"inwardIssue":  msi{"key": params[len(params)-1]},
+		"outwardIssue": msi{"key": params[0]},
+	})
+	resp, err := httpClient.Post("api/2/issueLink", payload)
+	if err != nil {
+		if resp != nil {
+			fmt.Println(resp.StatusCode)
+		}
 		return err
 	}
 	if resp.StatusCode >= 400 {

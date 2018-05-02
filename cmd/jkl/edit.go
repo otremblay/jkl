@@ -21,9 +21,9 @@ func NewEditCmd(args []string) (*EditCmd, error) {
 	ccmd := &EditCmd{project: os.Getenv("JIRA_PROJECT")}
 	f := flag.NewFlagSet("x", flag.ExitOnError)
 	f.StringVar(&ccmd.project, "p", "", "Jira project key")
-	f.StringVar(&ccmd.file, "f", "filename", "File to get issue description from")
+	f.StringVar(&ccmd.file, "f", "", "File to get issue description from")
 	f.Parse(args)
-	ccmd.taskKey = flag.Arg(0)
+	ccmd.taskKey = f.Arg(0)
 	return ccmd, nil
 }
 
