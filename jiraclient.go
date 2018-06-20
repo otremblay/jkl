@@ -93,16 +93,16 @@ func NewJiraClient(jiraRoot string) *JiraClient {
 }
 
 func (j *JiraClient) DoLess(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json, text/plain, text/html")
+	return j.DoEvenLess(req)
+}
+
+func (j *JiraClient) DoEvenLess(req *http.Request) (*http.Response, error) {
 	var err error
 	if os.Getenv("JIRA_COOKIEFILE") == "" {
 		req.SetBasicAuth(os.Getenv("JIRA_USER"), os.Getenv("JIRA_PASSWORD"))
 	}
-	if *Verbose {
-		fmt.Println("Jira User: ", os.Getenv("JIRA_USER"))
-		fmt.Println("Jira Password: ", os.Getenv("JIRA_PASSWORD"))
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json, text/plain, text/html")
 	resp, err := j.Client.Do(req)
 	if err != nil {
 		return nil, err

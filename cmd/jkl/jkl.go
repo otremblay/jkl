@@ -69,6 +69,8 @@ func getCmd(args []string, depth int) (Runner, error) {
 		return NewFlagCmd(args[1:], false)
 	case "link":
 		return NewLinkCmd(args[1:])
+	case "attach":
+		return NewAttachCmd(args[1:])
 	default:
 		// Think about this real hard.
 		// I want `jkl JIRA-1234 done` to move it to done.
@@ -100,7 +102,7 @@ func getCmd(args []string, depth int) (Runner, error) {
 	return nil, ErrTaskSubCommandNotFound
 }
 
-var verbs = []string{"list", "create", "task", "edit", "comment", "edit-comment"}
+var verbs = []string{"list", "create", "task", "edit", "comment", "edit-comment", "attach"}
 
 func init() {
 	sort.Strings(verbs)

@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -318,6 +319,50 @@ func LinkIssue(params []string) error {
 	}
 	if resp.StatusCode >= 400 {
 		io.Copy(os.Stderr, resp.Body)
+	}
+	return nil
+}
+
+func Attach(issueKey string, filename string) error {
+	bootHttpClient()
+
+	// Prepare a form that you will submit to that URL.
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	// Add your image file
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	fi, err := os.Lstat(filename)
+	fw, err := w.CreateFormFile("file", fi.Name())
+	if err != nil {
+		return err
+	}
+	if _, err = io.Copy(fw, f); err != nil {
+		return err
+	}
+	// Don't forget to close the multipart writer.
+	// If you don't close it, your request will be missing the terminating boundary.
+	w.Close()
+
+	req, err := http.NewRequest("POST", "", &b)
+
+	if err != nil {
+		return err
+	}
+	req.URL, err = url.Parse(httpClient.jiraRoot + "rest/" + fmt.Sprintf("api/2/issue/%s/attachments", issueKey))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("X-Atlassian-Token", "no-check")
+	req.Header.Add("Content-Type", w.FormDataContentType())
+	res, err := httpClient.DoEvenLess(req)
+
+	if err != nil {
+		s, _ := ioutil.ReadAll(res.Body)
+		fmt.Println(string(s))
+		return err
 	}
 	return nil
 }
