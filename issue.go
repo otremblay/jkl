@@ -38,9 +38,10 @@ func (it *IssueType) RangeFieldSpecs() string {
 }
 
 type AllowedValue struct {
-	Id    string
-	Self  string
-	Value string
+	Id    string `json:"id"`
+	Self  string `json:"self"`
+	Value string `json:"value"`
+	Name  string `json:"name"`
 }
 
 func (a *AllowedValue) String() string {
@@ -251,6 +252,91 @@ type JiraIssue struct {
 }
 
 var sprintRegexp = regexp.MustCompile(`name=([^,]+),`)
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil() || isEmptyValue(reflect.Indirect(v))
+	}
+	return false
+}
+
+func (i *JiraIssue) MarshalJSON() ([]byte, error) {
+	fields := map[string]interface{}{}
+	vf := reflect.ValueOf(*(i.Fields))
+	if i.EditMeta != nil && i.EditMeta.Fields != nil {
+		for k, f := range i.EditMeta.Fields {
+			name := k
+			if f.Schema.CustomId > 0 {
+				name = fmt.Sprintf("custom_%d", f.Schema.CustomId)
+			}
+			if val, ok := i.Fields.ExtraFields[name]; ok && val != nil {
+				if f.Schema.Type == "array" {
+					fields[name] = []interface{}{val}
+					continue
+				}
+				fields[name] = val
+			} else if val == nil {
+				delete(fields, name)
+			}
+		}
+	}
+
+	for i := 0; i < vf.NumField(); i++ {
+		ft := vf.Type().Field(i)
+		fv := vf.Field(i)
+
+		if ft.Name != "ExtraFields" && (fv.CanSet() || fv.CanInterface() || fv.CanAddr()) && fv.IsValid() {
+			name := strings.ToLower(ft.Name)
+			if alias, ok := ft.Tag.Lookup("json"); ok {
+				if alias != "" {
+					name = strings.Split(alias, ",")[0]
+				}
+			}
+			value := fv.Interface()
+			if value != nil {
+				fields[name] = value
+
+			} else {
+				delete(fields, name)
+			}
+		}
+	}
+	fmt.Println(fields)
+	for k, v := range fields {
+		v2 := reflect.ValueOf(v)
+		for {
+			if v2.Kind() != reflect.Ptr && v2.Kind() != reflect.Interface {
+				break
+			}
+			v2 = v2.Elem()
+		}
+		if !v2.IsValid() || (v2.Kind() == reflect.Slice && v2.Len() == 0) {
+			delete(fields, k)
+		}
+	}
+	em := i.EditMeta
+	i.EditMeta = nil
+	defer func() { i.EditMeta = em }()
+	type Alias JiraIssue
+	return json.Marshal(&struct {
+		*Alias
+		Fields map[string]interface{} `json:"fields,omitempty"`
+	}{
+		Fields: fields,
+		Alias:  (*Alias)(i),
+	})
+}
 
 func (i *JiraIssue) UnmarshalJSON(b []byte) error {
 	tmp := map[string]json.RawMessage{}

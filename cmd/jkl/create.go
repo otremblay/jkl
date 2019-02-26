@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
-	"fmt"
+	"strings"
 	"text/template"
 
 	"otremblay.com/jkl"
 )
 
 type CreateCmd struct {
-	args    []string
-	project string
-	file    string
+	args      []string
+	project   string
+	file      string
 	issuetype string
 }
 
@@ -43,7 +44,7 @@ func (ccmd *CreateCmd) Create() error {
 
 		}
 	}
-	
+
 	if ccmd.project == "" {
 		return ErrCcmdJiraProjectRequired
 	}
@@ -55,13 +56,22 @@ func (ccmd *CreateCmd) Create() error {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, fmt.Sprintf("Error getting the CreateMeta for project [%s] and issue types [%s]", ccmd.project, isstype), err)
 	}
-	
+
 	if !readfile {
 		createTemplate.Execute(b, cm)
 	}
 	var iss *jkl.JiraIssue
 	// TODO: Evil badbad don't do this.
-	em := &jkl.EditMeta{Fields: cm.Projects[0].IssueTypes[0].Fields}
+	var isst = cm.Projects[0].IssueTypes[0].Fields
+	for _, v := range cm.Projects[0].IssueTypes {
+		if strings.ToLower(isstype) == strings.ToLower(v.Name) {
+			isst = v.Fields
+			break
+		}
+	}
+
+	em := &jkl.EditMeta{Fields: isst}
+
 	if ccmd.file != "" {
 		iss, err = GetIssueFromFile(ccmd.file, b, em)
 		if err != nil {

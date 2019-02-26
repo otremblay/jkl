@@ -34,6 +34,7 @@ func bootHttpClient() {
 func Create(issue *JiraIssue) (*JiraIssue, error) {
 	bootHttpClient()
 	payload, err := formatPayload(issue)
+
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +219,7 @@ func DoTransition(taskKey string, transitionName string) error {
 		return err
 	}
 	var t *Transition
-	fmt.Println(iss.Transitions)
+	//fmt.Println(iss.Transitions)
 	for _, transition := range iss.Transitions {
 		if strings.ToLower(transition.Name) == strings.ToLower(transitionName) {
 			t = transition
@@ -381,7 +382,7 @@ func serializePayload(i interface{}) (io.Reader, error) {
 	payload := bytes.NewBuffer(b)
 	enc := json.NewEncoder(payload)
 	err := enc.Encode(i)
-	fmt.Println(payload.String())
+	//fmt.Println("payload: ", payload.String())
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

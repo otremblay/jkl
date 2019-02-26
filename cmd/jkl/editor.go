@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -22,16 +21,21 @@ import (
 // 	[System.get_env("EDITOR"), "nano", "vim", "vi"]
 // 	|> Enum.find(nil, fn (ed) -> System.find_executable(ed) != nil end)
 //   end
-var editors = []string{os.Getenv("EDITOR"), "nano", "vim", "vi"}
+var editors = []string{"nano", "vim", "vi"}
 
 // GetEditor returns the path to an editor, taking $EDITOR in account
 func GetEditor() string {
+	if ed := os.Getenv("EDITOR"); ed != "" {
+		return ed
+	}
+	if ed := os.Getenv("VISUAL"); ed != "" {
+		return ed
+	}
 	for _, ed := range editors {
 		if p, err := exec.LookPath(ed); err == nil {
 			return p
 		}
 	}
-	log.Fatal("No editor available; use flags.")
 	return ""
 }
 
@@ -105,7 +109,7 @@ func GetIssueFromFile(filename string, initial io.Reader, editMeta *jkl.EditMeta
 var spacex = regexp.MustCompile(`\s`)
 
 func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
-	iss := &jkl.JiraIssue{Fields: &jkl.Fields{}}
+	iss := &jkl.JiraIssue{Fields: &jkl.Fields{ExtraFields: map[string]interface{}{}}}
 	riss := reflect.ValueOf(iss).Elem()
 	fieldsField := riss.FieldByName("Fields").Elem()
 	currentField := reflect.Value{}
@@ -157,6 +161,25 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 			}
 		} else if editMeta != nil {
 			// If it's not valid, throw it at the createmeta. It will probably end up in ExtraFields.
+			val := strings.TrimSpace(strings.Join(parts[1:], ":"))
+			for fieldname, m := range editMeta.Fields {
+				var something interface{} = val
+				if strings.ToLower(m.Name) == strings.ToLower(potentialField) {
+					name := fieldname
+					for _, av := range m.AllowedValues {
+						if strings.ToLower(av.Name) == strings.ToLower(val) {
+							something = av
+							break
+						}
+					}
+					if m.Schema.CustomId > 0 {
+						name = fmt.Sprintf("custom_%d", m.Schema.CustomId)
+					}
+					iss.Fields.ExtraFields[name] = something
+
+					break
+				}
+			}
 
 		}
 		if currentField.IsValid() {
@@ -168,6 +191,8 @@ func IssueFromReader(f io.Reader, editMeta *jkl.EditMeta) *jkl.JiraIssue {
 			currentField.SetString(newvalue)
 		}
 	}
+
+	iss.EditMeta = editMeta
 	return iss
 }
 
