@@ -1,4 +1,4 @@
-module otremblay.com/jkl
+module github.com/otremblay/jkl
 
 go 1.13
 
