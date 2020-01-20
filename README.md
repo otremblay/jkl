@@ -17,7 +17,18 @@ Then, execute the following command from your shell:
 
 ## Usage
 
-TODO: Write usage instructions
+Make sure you create a `~/.jklrc` file in your home directory, it should contain
+at a minimum:
+
+```
+JIRA_ROOT="https://jira.example.com/"
+JIRA_USER="myusername"
+JIRA_PASSWORD="mypassword"
+JIRA_PROJECT="DPK"
+```
+Those values are for example only, your setup will be different.
+
+TODO: Finish writing usage instructions
 
 ## Contributing
 
